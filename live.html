@@ -48,9 +48,10 @@
             gap: 15px;
             flex-wrap: wrap;
             margin-top: 20px;
-            padding: 15px;
+            padding: 20px;
             background: #2a2a2a;
             border-radius: 8px;
+            cursor: default;
         }
 
         .btn {
@@ -141,44 +142,22 @@
                 <div class="live-dot" id="live-dot"></div>
                 <span id="status-text">Checking Status...</span>
             </div>
+            <span style="margin: 0 auto; font-family: 'Poppins', sans-serif; font-weight: bold; position: absolute; left: 48%; transform: translateX(-50%); font-size: small; text-align: center;">LIVE STREAMING TEAM <br>STUDENT LEADERS BOARD <br> SEKOLAH MENENGAH KEBANGSAAN MUNSHI IBRAHIM LABIS</span>
             <div style="margin-left: auto;">
-                <button class="btn" onclick="window.location.href='index'"><i class='bx bx-home'></i> Back To Home</button>
+                <button class="btn" onclick="window.location.href='index.html'"><i class='bx bx-home'></i> Back To Home</button>
                 <button class="btn" id="fullscreen-btn"><i class='bx bx-fullscreen'></i> Fullscreen</button>
             </div>
         </div>
     </div>
 
     <script>
-        const apiKey = 'AIzaSyAI7uz2TAQIAg2jwkOaWJz6ax38Bn2TmAE'; // Replace with your YouTube API key
-        const channelId = 'UCWuXC3INt1e2E1VH9uVbzuw'; // Replace with the channel's ID (e.g., UC1234567890abcdef)
+        // Replace 'VIDEO_ID_HERE' with your YouTube Live video ID
+        const videoId = 'FIRqwy6vj8Q?si=QpFgXlGXwoExHnno';
         let player;
         let refreshInterval;
 
-        // Function to fetch the current live stream video ID
-        async function fetchLiveStream() {
-            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${apiKey}`;
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.items && data.items.length > 0) {
-                    const videoId = data.items[0].id.videoId;
-                    initializePlayer(videoId);
-                    updateStatus('Live Now', true);
-                } else {
-                    updateStatus('No live streaming available', false);
-                    hidePreloader();
-                }
-            } catch (error) {
-                console.error('Error fetching live stream:', error);
-                updateStatus('Error fetching live stream', false);
-                hidePreloader();
-            }
-        }
-
         // Function to initialize the YouTube player
-        function initializePlayer(videoId) {
+        function initializePlayer() {
             player = new YT.Player('player', {
                 height: '100%',
                 width: '100%',
@@ -204,23 +183,21 @@
             liveDot.style.display = isLive ? 'block' : 'none';
         }
 
-        // Function to hide the preloader
         function hidePreloader() {
             document.getElementById('preloader').style.display = 'none';
         }
 
-        // Function to handle player state changes
         function onPlayerStateChange(event) {
             const states = {
-                [-1]: 'Unstarted',
-                0: 'Ended',
-                1: 'Playing',
+                [-1]: 'Connecting...',
+                0: 'Stream Ended',
+                1: 'Live Now',
                 2: 'Paused',
                 3: 'Buffering',
                 5: 'Video Cued'
             };
             const status = states[event.data] || 'Unknown';
-            updateStatus(status, event.data === 1); // Show live dot only when playing
+            updateStatus(status, event.data === 1);
         }
 
         // Control Handlers
@@ -242,12 +219,10 @@
                     player.isMuted() ? player.unMute() : player.mute();
                     break;
                 case 'ArrowUp':
-                    player.setVolume(Math.min(player.getVolume() + 10, 100));
-                    updateVolumeDisplay();
+                    player.setVolume(Math.min(player.getVolume() + 5, 100));
                     break;
                 case 'ArrowDown':
-                    player.setVolume(Math.max(player.getVolume() - 10, 0));
-                    updateVolumeDisplay();
+                    player.setVolume(Math.max(player.getVolume() - 5, 0));
                     break;
                 case ' ':
                     if (player.getPlayerState() === YT.PlayerState.PLAYING) {
@@ -261,13 +236,12 @@
 
         document.addEventListener('keydown', handleKeyboardShortcuts);
 
-        // Function to handle player readiness
         function onPlayerReady(event) {
             hidePreloader();
+            updateStatus('Live Now', true);
             startStatusCheck();
         }
 
-        // Function to periodically check the player status
         function startStatusCheck() {
             refreshInterval = setInterval(() => {
                 if (player.getPlayerState() !== 1) {
@@ -282,8 +256,10 @@
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // Fetch the live stream when the page loads
-        fetchLiveStream();
+        // Initialize player when API is ready
+        function onYouTubeIframeAPIReady() {
+            initializePlayer();
+        }
     </script>
 </body>
 </html>
