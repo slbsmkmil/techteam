@@ -49,10 +49,57 @@
       <div class="container-fluid">
         <nav class="navbar navbar-expand-lg custom_nav-container ">
           <a class="navbar-brand" href="index.html">
-            <img src="images/logo.png" alt="Logo" class="navbar-logo" style="max-height: 50px; width: auto; margin-right: 15px;">
+            <img src="images/logo.png" alt="Logo" class="navbar-logo img-fluid" style="max-height: 50px; width: auto; margin-right: 15px;">
+            <style>
+                @media (max-width: 576px) {
+                .navbar-logo {
+                  max-height: 40px;
+                  margin-right: 5px;
+                }
+                }
+
+                @media (max-width: 768px) {
+                .navbar-logo {
+                  max-height: 45px;
+                  margin-right: 10px;
+                }
+                }
+
+                @media (max-width: 992px) {
+                .navbar-logo {
+                  max-height: 50px;
+                  margin-right: 15px;
+                }
+                }
+            </style>
             <span>
               LIVE STREAMING TEAM
             </span>
+            <style>
+              @media (max-width: 576px) {
+                .navbar-brand span {
+                  font-size: 14px;
+                }
+              }
+
+              @media (max-width: 768px) {
+                .navbar-brand span {
+                  font-size: 16px;
+                }
+              }
+
+              @media (max-width: 992px) {
+                .navbar-brand span {
+                  font-size: 18px;
+                }
+              }
+
+              @media (min-width: 993px) {
+                .navbar-brand span {
+                  font-size: 20px;
+                }
+              }
+            </style>
           </a>
 
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -156,7 +203,7 @@
               Address
             </h4>
             <div class="contact_link_box">
-              <a href="https://maps.app.goo.gl/5HK2Szhnw7GiBsHQA">
+              <a href="https://maps.app.goo.gl/5HK2Szhnw7GiBsHQA" target="_blank">
                 <i class="fa fa-map-marker" aria-hidden="true"></i>
                 <span>
                   JKR 484, JALAN SEKOLAH, 85300 LABIS, JOHOR DARUL TAKZIM.
@@ -177,10 +224,10 @@
             </div>
           </div>
           <div class="info_social">
-            <a href="https://www.facebook.com/profile.php?id=100081324157349">
+            <a href="https://www.facebook.com/profile.php?id=100081324157349" target="_blank">
               <i class="fa fa-facebook" aria-hidden="true"></i>
             </a>
-            <a href="https://www.youtube.com/@slbsmkmil">
+            <a href="https://www.youtube.com/@slbsmkmil" target="_blank">
               <i class="fa fa-youtube" aria-hidden="true"></i>
             </a>
           </div>
