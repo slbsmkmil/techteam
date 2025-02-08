@@ -99,8 +99,7 @@
                 font-size: 14px;
             }
         }
-    </style>
-    <style>
+
         .preloader {
             position: fixed;
             top: 0;
@@ -113,7 +112,7 @@
             align-items: center;
             z-index: 9999;
         }
-    
+
         .preloader .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid #fff;
@@ -122,7 +121,7 @@
             height: 40px;
             animation: spin 1s linear infinite;
         }
-    
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -139,23 +138,47 @@
         </div>
         <div class="controls">
             <div class="status-indicator">
-                <div class="live-dot"></div>
+                <div class="live-dot" id="live-dot"></div>
                 <span id="status-text">Checking Status...</span>
             </div>
             <div style="margin-left: auto;">
+                <button class="btn" onclick="window.location.href='index.html'"><i class='bx bx-home'></i> Back To Home</button>
                 <button class="btn" id="fullscreen-btn"><i class='bx bx-fullscreen'></i> Fullscreen</button>
             </div>
         </div>
     </div>
 
     <script>
+        const apiKey = 'AIzaSyAI7uz2TAQIAg2jwkOaWJz6ax38Bn2TmAE'; // Replace with your YouTube API key
+        const channelId = 'UCWuXC3INt1e2E1VH9uVbzuw'; // Replace with the channel's ID (e.g., UC1234567890abcdef)
         let player;
         let refreshInterval;
 
-        // Replace 'VIDEO_ID' with your YouTube Live video ID
-        const videoId = 'GU5Fb19m7Xw?si=0pggHhOlQV-MaLC2';
+        // Function to fetch the current live stream video ID
+        async function fetchLiveStream() {
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${apiKey}`;
 
-        function onYouTubeIframeAPIReady() {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.items && data.items.length > 0) {
+                    const videoId = data.items[0].id.videoId;
+                    initializePlayer(videoId);
+                    updateStatus('Live Now', true);
+                } else {
+                    updateStatus('No live streaming available', false);
+                    hidePreloader();
+                }
+            } catch (error) {
+                console.error('Error fetching live stream:', error);
+                updateStatus('Error fetching live stream', false);
+                hidePreloader();
+            }
+        }
+
+        // Function to initialize the YouTube player
+        function initializePlayer(videoId) {
             player = new YT.Player('player', {
                 height: '100%',
                 width: '100%',
@@ -173,16 +196,21 @@
             });
         }
 
-        function onPlayerReady(event) {
-            startStatusCheck();
-        }
-
-        function onPlayerStateChange(event) {
-            updateStatusIndicator(event.data);
-        }
-
-        function updateStatusIndicator(state) {
+        // Function to update the status indicator
+        function updateStatus(text, isLive) {
             const statusText = document.getElementById('status-text');
+            const liveDot = document.getElementById('live-dot');
+            statusText.textContent = text;
+            liveDot.style.display = isLive ? 'block' : 'none';
+        }
+
+        // Function to hide the preloader
+        function hidePreloader() {
+            document.getElementById('preloader').style.display = 'none';
+        }
+
+        // Function to handle player state changes
+        function onPlayerStateChange(event) {
             const states = {
                 [-1]: 'Unstarted',
                 0: 'Ended',
@@ -191,15 +219,8 @@
                 3: 'Buffering',
                 5: 'Video Cued'
             };
-            statusText.textContent = state === 1 ? 'Live Now' : states[state];
-        }
-
-        function startStatusCheck() {
-            refreshInterval = setInterval(() => {
-                player.getPlayerState() === 1 ? 
-                    clearInterval(refreshInterval) : 
-                    player.seekTo(player.getDuration(), true);
-            }, 30000);
+            const status = states[event.data] || 'Unknown';
+            updateStatus(status, event.data === 1); // Show live dot only when playing
         }
 
         // Control Handlers
@@ -212,35 +233,6 @@
             }
         });
 
-        // YouTube API Loader
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    </script>
-    <script>
-        function hidePreloader() {
-            document.getElementById('preloader').style.display = 'none';
-        }
-    
-        function showError(message) {
-            const statusText = document.getElementById('status-text');
-            statusText.textContent = message;
-            statusText.style.color = 'red';
-        }
-    
-        function handleNetworkStatus() {
-            const statusText = document.getElementById('status-text');
-            window.addEventListener('online', () => {
-                statusText.textContent = 'Online';
-                statusText.style.color = 'green';
-            });
-            window.addEventListener('offline', () => {
-                statusText.textContent = 'Offline';
-                statusText.style.color = 'red';
-            });
-        }
-    
         function handleKeyboardShortcuts(event) {
             switch (event.key) {
                 case 'f':
@@ -266,37 +258,32 @@
                     break;
             }
         }
-    
+
         document.addEventListener('keydown', handleKeyboardShortcuts);
-    
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                videoId: videoId,
-                playerVars: {
-                    autoplay: 1,
-                    controls: 0,
-                    modestbranding: 1,
-                    rel: 0
-                },
-                events: {
-                    onReady: onPlayerReady,
-                    onStateChange: onPlayerStateChange,
-                    onError: onPlayerError
-                }
-            });
-        }
-    
+
+        // Function to handle player readiness
         function onPlayerReady(event) {
             hidePreloader();
             startStatusCheck();
-            handleNetworkStatus();
         }
-    
-        function onPlayerError(event) {
-            showError('Error loading video. Please check the video ID.');
+
+        // Function to periodically check the player status
+        function startStatusCheck() {
+            refreshInterval = setInterval(() => {
+                if (player.getPlayerState() !== 1) {
+                    player.seekTo(player.getDuration(), true);
+                }
+            }, 30000);
         }
+
+        // YouTube API Loader
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // Fetch the live stream when the page loads
+        fetchLiveStream();
     </script>
 </body>
 </html>

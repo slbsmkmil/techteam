@@ -142,9 +142,26 @@
                       <a href="about.html" class="btn1">
                         Learn More
                       </a>
-                      <a href="live.html" class="btn1" style="color: #fff; background: #ff0000;" target="_blank">
-                         Watch Live Now
-                      </a>
+                      <a href="live.html" id="live-btn" class="btn1" target="_blank" style="color: #fff; background-color: #ff0000; display: flex; align-items: center; padding: 5px 10px; text-decoration: none; border-radius: 5px;">
+                        <div class="live-dot" id="live-dot"></div> 
+                        <span style="margin-left: 5px;">Watch Live Now</span>
+                    </a>
+                    <style>
+                        .live-dot {
+                            width: 10px;
+                            height: 10px;
+                            background: #fff;
+                            border-radius: 50%;
+                            animation: pulse 1.5s infinite;
+                            margin-right: 10px; /* Moves the dot to the left */
+                        }
+                    
+                        @keyframes pulse {
+                            0% { box-shadow: 0 0 0 0 rgb(255, 255, 255); }
+                            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+                            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+                        }
+                    </style>                    
                     </div>
                   </div>
                 </div>
@@ -161,6 +178,48 @@
     </section>
     <!-- end slider section -->
   </div>
+
+  <style>
+    .btn1 {
+      display: none; /* Hide the button by default */
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+  </style>
+   <script>
+    const apiKey = 'AIzaSyAI7uz2TAQIAg2jwkOaWJz6ax38Bn2TmAE'; // Replace with your YouTube API key
+    const channelId = 'UCWuXC3INt1e2E1VH9uVbzuw'; // Replace with the channel's ID (e.g., UC1234567890abcdef)
+    const liveButton = document.getElementById('live-btn');
+
+    // Function to check for live stream
+    async function checkLiveStream() {
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${apiKey}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+          // Live stream is available
+          liveButton.style.display = 'inline-block'; // Show the button
+        } else {
+          // No live stream is available
+          liveButton.style.display = 'none'; // Hide the button
+        }
+      } catch (error) {
+        console.error('Error checking live stream:', error);
+        liveButton.style.display = 'none'; // Hide the button in case of error
+      }
+    }
+
+    // Check for live stream when the page loads
+    checkLiveStream();
+
+    // Optional: Periodically check for live stream (e.g., every 5 minutes)
+    setInterval(checkLiveStream, 300000); // 300000 ms = 5 minutes
+  </script>
 
 
   <!-- service section -->
