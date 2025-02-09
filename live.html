@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CTC7V5EM0J"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-CTC7V5EM0J');
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="keywords" content="Live Streaming Team" />
@@ -139,6 +130,115 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Add these media queries at the end of your existing CSS */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+                text-align: center;
+            }
+            
+            .controls > div {
+                margin: 0 auto;
+                order: -1;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .controls span[style] {
+                position: static !important;
+                transform: none !important;
+                margin: 10px 0 !important;
+                font-size: 12px !important;
+                line-height: 1.4;
+                text-align: center;
+                order: 1; /* Ensure the text is between status and buttons */
+            }
+
+            .controls > div:last-child {
+                order: 2; /* Buttons at the bottom */
+                margin-top: 10px;
+            }
+            
+            .btn, .status-indicator {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .status-indicator {
+                order: 0; /* Status indicator at the top */
+                margin-bottom: 10px;
+            }
+            
+            .controls span[style] {
+                position: static !important;
+                transform: none !important;
+                margin: 10px 0 !important;
+                font-size: 12px !important;
+                line-height: 1.4;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .player-container {
+                margin: 0 -10px;
+                width: calc(100% + 20px);
+                border-radius: 0;
+            }
+            
+            .controls {
+                padding: 10px;
+                gap: 10px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .status-indicator {
+                font-size: 12px;
+            }
+            
+            .controls span[style] {
+                font-size: 11px !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .btn {
+                font-size: 11px;
+            }
+            
+            .status-indicator {
+                font-size: 11px;
+            }
+        }
+
+        /* Add this to your existing CSS for better mobile handling */
+        .controls {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .controls > div {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
     </style>
 </head>
