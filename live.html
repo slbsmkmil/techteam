@@ -95,16 +95,6 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
         }
 
-        @media (max-width: 768px) {
-            .controls {
-                gap: 10px;
-            }
-            
-            .btn, .status-indicator {
-                font-size: 14px;
-            }
-        }
-
         .preloader {
             position: fixed;
             top: 0;
@@ -132,7 +122,18 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Add these media queries at the end of your existing CSS */
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(255, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -147,7 +148,6 @@
             
             .controls > div {
                 margin: 0 auto;
-                order: -1;
                 width: 100%;
                 display: flex;
                 justify-content: center;
@@ -161,30 +161,11 @@
                 font-size: 12px !important;
                 line-height: 1.4;
                 text-align: center;
-                order: 1; /* Ensure the text is between status and buttons */
-            }
-
-            .controls > div:last-child {
-                order: 2; /* Buttons at the bottom */
-                margin-top: 10px;
             }
             
             .btn, .status-indicator {
                 width: 100%;
                 justify-content: center;
-            }
-            
-            .status-indicator {
-                order: 0; /* Status indicator at the top */
-                margin-bottom: 10px;
-            }
-            
-            .controls span[style] {
-                position: static !important;
-                transform: none !important;
-                margin: 10px 0 !important;
-                font-size: 12px !important;
-                line-height: 1.4;
             }
         }
 
@@ -212,33 +193,6 @@
             .status-indicator {
                 font-size: 12px;
             }
-            
-            .controls span[style] {
-                font-size: 11px !important;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .btn {
-                font-size: 11px;
-            }
-            
-            .status-indicator {
-                font-size: 11px;
-            }
-        }
-
-        /* Add this to your existing CSS for better mobile handling */
-        .controls {
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .controls > div {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
         }
     </style>
 </head>
@@ -247,6 +201,11 @@
         <div class="player-container">
             <div class="preloader" id="preloader">
                 <div class="spinner"></div>
+            </div>
+            <div class="error-message" id="error-message">
+                <h3>无法加载直播</h3>
+                <p>请检查网络连接或直播状态</p>
+                <button class="btn" onclick="retryLoad()">重试</button>
             </div>
             <div id="player"></div>
         </div>
@@ -264,31 +223,38 @@
     </div>
 
     <script>
-        // Replace 'VIDEO_ID_HERE' with your YouTube Live video ID
-        const videoId = 'H22Iv01QRzQ';
+        // 使用正确的视频ID
+        const videoId = 'H22Iv01QRzQ'; // 移除参数部分
         let player;
         let refreshInterval;
 
-        // Function to initialize the YouTube player
+        // 初始化 YouTube 播放器
         function initializePlayer() {
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                videoId: videoId,
-                playerVars: {
-                    autoplay: 1,
-                    controls: 0,
-                    modestbranding: 1,
-                    rel: 0
-                },
-                events: {
-                    onReady: onPlayerReady,
-                    onStateChange: onPlayerStateChange
-                }
-            });
+            try {
+                player = new YT.Player('player', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: {
+                        'autoplay': 1,
+                        'controls': 1, // 改为1以显示控制条
+                        'modestbranding': 1,
+                        'rel': 0,
+                        'enablejsapi': 1,
+                        'origin': window.location.origin
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange,
+                        'onError': onPlayerError
+                    }
+                });
+            } catch (error) {
+                console.error('Player initialization error:', error);
+                showError();
+            }
         }
 
-        // Function to update the status indicator
         function updateStatus(text, isLive) {
             const statusText = document.getElementById('status-text');
             const liveDot = document.getElementById('live-dot');
@@ -298,6 +264,22 @@
 
         function hidePreloader() {
             document.getElementById('preloader').style.display = 'none';
+        }
+
+        function showError() {
+            hidePreloader();
+            document.getElementById('error-message').style.display = 'block';
+        }
+
+        function onPlayerReady(event) {
+            hidePreloader();
+            updateStatus('Live Now', true);
+            console.log('Player is ready');
+            
+            // 检查视频是否可播放
+            if (player.getVideoData().title === '') {
+                updateStatus('Stream Not Available', false);
+            }
         }
 
         function onPlayerStateChange(event) {
@@ -311,34 +293,58 @@
             };
             const status = states[event.data] || 'Unknown';
             updateStatus(status, event.data === 1);
+            
+            // 如果是直播结束状态
+            if (event.data === 0) {
+                clearInterval(refreshInterval);
+            }
         }
 
-        // Control Handlers
+        function onPlayerError(event) {
+            console.error('Player error:', event.data);
+            updateStatus('Stream Error', false);
+            showError();
+        }
+
+        function retryLoad() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('preloader').style.display = 'flex';
+            if (player) {
+                player.destroy();
+            }
+            setTimeout(initializePlayer, 1000);
+        }
+
+        // 全屏功能
         document.getElementById('fullscreen-btn').addEventListener('click', () => {
             const container = document.querySelector('.player-container');
             if (!document.fullscreenElement) {
-                container.requestFullscreen().catch(err => alert('Error entering fullscreen: ${err}'));
+                container.requestFullscreen().catch(err => {
+                    console.error('Error entering fullscreen:', err);
+                });
             } else {
                 document.exitFullscreen();
             }
         });
 
+        // 键盘快捷键
         function handleKeyboardShortcuts(event) {
+            if (!player) return;
+            
             switch (event.key) {
                 case 'f':
                     document.getElementById('fullscreen-btn').click();
                     break;
                 case 'm':
-                    player.isMuted() ? player.unMute() : player.mute();
-                    break;
-                case 'ArrowUp':
-                    player.setVolume(Math.min(player.getVolume() + 5, 100));
-                    break;
-                case 'ArrowDown':
-                    player.setVolume(Math.max(player.getVolume() - 5, 0));
+                    if (player.isMuted) {
+                        player.unMute();
+                    } else {
+                        player.mute();
+                    }
                     break;
                 case ' ':
-                    if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+                    event.preventDefault();
+                    if (player.getPlayerState() === 1) {
                         player.pauseVideo();
                     } else {
                         player.playVideo();
@@ -349,31 +355,25 @@
 
         document.addEventListener('keydown', handleKeyboardShortcuts);
 
-        function onPlayerReady(event) {
-            hidePreloader();
-            updateStatus('Live Now', true);
-            startStatusCheck();
-        }
-
-        function startStatusCheck() {
-            refreshInterval = setInterval(() => {
-                if (player.getPlayerState() !== 1) {
-                    player.seekTo(player.getDuration(), true);
-                }
-            }, 30000);
-        }
-
-        // YouTube API Loader
+        // YouTube API 加载
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // Initialize player when API is ready
+        // API 准备就绪时初始化播放器
         function onYouTubeIframeAPIReady() {
+            console.log('YouTube API ready');
             initializePlayer();
         }
+
+        // 备用加载方案
+        setTimeout(() => {
+            if (!player && typeof YT === 'undefined') {
+                console.log('YouTube API failed to load, retrying...');
+                retryLoad();
+            }
+        }, 10000);
     </script>
 </body>
 </html>
-
